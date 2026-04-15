@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bluum Sales Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark: #183A25;
+      --accent: #049e40;
+      --white: #ffffff;
+      --light-bg: #f4f7f5;
+      --gray-text: #5a6b5e;
+      --card-radius: 16px;
+      --input-radius: 24px;
+      --bubble-radius: 18px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--light-bg);
+      color: #1a1a1a;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    /* Header */
+    .header {
+      background: var(--dark);
+      color: var(--white);
+      padding: 16px 20px 14px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+
+    .header-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-icon svg { width: 22px; height: 22px; fill: white; }
+
+    .header-text { flex: 1; }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+
+    .header-sub {
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-top: 1px;
+    }
+
+    /* Chat area */
+    .chat-area {
+      position: fixed;
+      top: 66px; left: 0; right: 0; bottom: 80px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Welcome / suggestions */
+    .welcome-card {
+      background: var(--white);
+      border-radius: var(--card-radius);
+      padding: 18px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 4px;
+    }
+
+    .welcome-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .welcome-sub {
+      font-size: 12px;
+      color: var(--gray-text);
+      line-height: 1.5;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .suggestion-chip {
+      background: var(--dark);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-appearance: none;
+    }
+
+    .suggestion-chip:hover { background: #1e4a2e; }
+    .suggestion-chip:active { transform: scale(0.96); }
+
+    /* Message bubbles */
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      animation: msgIn 0.22s ease-out;
+    }
+
+    .msg-row.user { align-items: flex-end; }
+    .msg-row.assistant { align-items: flex-start; }
+
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-bubble {
+      background: var(--accent);
+      color: var(--white);
+      font-size: 15px;
+      line-height: 1.45;
+      padding: 10px 15px;
+      border-radius: var(--bubble-radius);
+      border-bottom-right-radius: 4px;
+      max-width: 82%;
+      word-break: break-word;
+    }
+
+    .assistant-card {
+      background: var(--white);
+      border-radius: var(--card-radius);
+      padding: 14px 16px;
+      max-width: 88%;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .assistant-card .dept-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .assistant-card .answer-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1a1a1a;
+    }
+
+    .assistant-card .contact-row {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      font-size: 12px;
+      color: var(--gray-text);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .assistant-card .contact-row a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .assistant-card .contact-icon {
+      width: 14px;
+      height: 14px;
+      fill: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .no-result-card {
+      background: var(--white);
+      border-radius: var(--card-radius);
+      padding: 16px 18px;
+      max-width: 88%;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      font-size: 14px;
+      line-height: 1.6;
+      color: #444;
+    }
+
+    .no-result-card strong { color: var(--dark); }
+
+    /* Input bar */
+    .input-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid #e0e8e2;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.07);
+      z-index: 100;
+    }
+
+    .input-bar input {
+      flex: 1;
+      font-size: 16px;
+      font-family: inherit;
+      border: none;
+      outline: none;
+      background: var(--light-bg);
+      color: #1a1a1a;
+      padding: 11px 18px;
+      border-radius: var(--input-radius);
+      -webkit-appearance: none;
+    }
+
+    .input-bar input::placeholder { color: #aaa; }
+
+    .send-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-appearance: none;
+    }
+
+    .send-btn:active { transform: scale(0.92); background: #038a35; }
+    .send-btn svg { width: 20px; height: 20px; fill: white; }
+
+    /* Divider */
+    .msg-divider {
+      text-align: center;
+      font-size: 10px;
+      color: #aaa;
+      padding: 2px 0;
+      letter-spacing: 0.5px;
+    }
+
+    /* Scrollbar */
+    .chat-area::-webkit-scrollbar { width: 4px; }
+    .chat-area::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+  </div>
+  <div class="header-text">
+    <div class="header-title">Bluum</div>
+    <div class="header-sub">Sales Assistant</div>
+  </div>
+</div>
+
+<!-- CHAT AREA -->
+<div class="chat-area" id="chatArea">
+  <div class="welcome-card" id="welcomeCard">
+    <div class="welcome-title">👋 Hi there, sales rep!</div>
+    <div class="welcome-sub">Ask me anything about Bluum's processes — quotes, bids, contracts, billing, tech support, and more.</div>
+    <div class="suggestions" id="suggestions">
+      <button class="suggestion-chip" onclick="askSuggestion(this)">How do I create a quote?</button>
+      <button class="suggestion-chip" onclick="askSuggestion(this)">Who handles commissions?</button>
+      <button class="suggestion-chip" onclick="askSuggestion(this)">How do I request a quote?</button>
+      <button class="suggestion-chip" onclick="askSuggestion(this)">Who do I contact for a broken install?</button>
+      <button class="suggestion-chip" onclick="askSuggestion(this)">How do I engage the Bids team?</button>
+      <button class="suggestion-chip" onclick="askSuggestion(this)">What is Tech Service?</button>
+      <button class="suggestion-chip" onclick="askSuggestion(this)">How does leasing work?</button>
+      <button class="suggestion-chip" onclick="askSuggestion(this)">How do I submit an order?</button>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT BAR -->
+<div class="input-bar">
+  <input type="text" id="userInput" placeholder="Ask a question…" autocomplete="off" autocorrect="off" autocapitalize="off" enterkeyhint="send" onkeydown="handleKeydown(event)">
+  <button class="send-btn" onclick="sendMessage()">
+    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+  </button>
+</div>
+
+<script>
+// ─── KNOWLEDGE BASE ────────────────────────────────────────────────────────────
+const KB = [
+  {
+    department: "Bids Team",
+    topics: ["bid","proposal","RFP","RFQ","go/no-go","bid bond","insurance certificate","dealer letter","M/WBE","bidding portal","bid opportunity","bid list"],
+    answer: "The Bids Team handles all bid/RFP responses. Email bids@bluum.com to engage them. Key requirements: opportunity must be entered in Zinnia as a \"Bid\" type as early as possible. They can't start without a complete scope, BOM, labor details, and customer requirements. Any deviations from standard process require Sales Director approval. They host kickoff calls, prepare proposal management plans, collect required materials (dealer letters, reference letters, bid bonds, insurance certs, spec sheets), and coordinate final submission.",
+    contact: "bids@bluum.com",
+    source: "Bids Team One-Pager"
+  },
+  {
+    department: "Contracts",
+    topics: ["contract","co-op","contract award","admin fee","contract compliance","pricing rules","Zinnia contract","contract number","usage reporting","co-op contract","national contract","state contract","contract dropdown"],
+    answer: "The Contracts team manages all contract records and compliance. For new contract awards, email contracts@bluum.com. To find existing contracts, use the Zinnia Contract Record List or bluum.com/contracts. Always link the correct contract to your quote using the Contract dropdown (use % wildcard to search). Check the Zinnia record for admin fee %, eligibility, and pricing rules before quoting. National contracts work in any state — check the \"National\" region. Quick links: Internal Zinnia list: https://bit.ly/49ozkli | Public page: bluum.com/contracts",
+    contact: "contracts@bluum.com (awards/compliance) | quotes@bluum.com (pricing/quote assembly)",
+    source: "Contracts Department One-Pager"
+  },
+  {
+    department: "Create a Quote",
+    topics: ["create quote","how to quote","quoting","SKU","Zinnia quote","NetSuite quote","GP","margin","contract quote","special pricing","vendor notes","custom price","quote steps","quote process"],
+    answer: "To create a quote in Zinnia/NetSuite: Search for the customer → click the dropdown icon → select \"Create new quote.\" Set status, expiration, expected close date, title/memo, lead source, and contract (if applicable). Check billing/shipping address. Add products by SKU — price/cost auto-populate. If no SKU exists, use PARENT-NONE. For margin: use %GP field. For contract pricing: use % OFF LIST. Add special pricing reference and vendor notes. SAVE EARLY AND OFTEN. Note: Opportunities over $25K or with installation require an opportunity to be created first.",
+    contact: "quotes@bluum.com",
+    source: "Create a Quote Guide"
+  },
+  {
+    department: "Engineering Team",
+    topics: ["engineering","AV design","site walk","BOM","bill of materials","SOW","scope of work","PLN","plan language narrative","engineer","AV solution","design","integration design","pre-sales engineering"],
+    answer: "Bluum's Engineering Team supports AV solution design before, during, and after the sale. Engage them once an opportunity is identified and a site walk is needed: create an opportunity in Zinnia and an engineer will be assigned. Work with your engineer to schedule a site visit (onsite or FaceTime). Take photos and measurements, add info to Box. The engineer builds the BOM, Labor Sheet, and SOW, then sends to the quotes team. Once in rep review, you can adjust sell price and margin.\n\nMagic statement: \"As you move forward with purchasing AV products, we at Bluum have the best support and will assist you with design, integration, and deployment.\"",
+    contact: "Create an opportunity in Zinnia — engineer will be assigned",
+    source: "Engineering Team One-Pager"
+  },
+  {
+    department: "Finance — Credit & Deal Terms",
+    topics: ["credit","credit limit","new customer credit","credit setup","sales tax","tax discrepancy","AIA","COI","insurance request","deal terms","credit card payment"],
+    answer: "For credit issues — new customer credit setup, orders exceeding credit limits, credit card payments, sales tax discrepancies, AIA/COI/insurance requests — go through your Sales Admin, who will liaise with credit@bluum.com or billingpayments@bluum.com.",
+    contact: "credit@bluum.com | billingpayments@bluum.com (via your Sales Admin)",
+    source: "Finance Credit & Deal Terms One-Pager"
+  },
+  {
+    department: "Finance — Billing & Invoices",
+    topics: ["invoice","billing","proforma","credit memo","W-9","banking form","invoice resend","invoice revision","payment confirmation","cash application"],
+    answer: "For invoice creation, revision, or resends; credit memos; proforma invoices; banking/vendor/W-9 forms; credit card payments; payment confirmations — email billingpayments@bluum.com.",
+    contact: "billingpayments@bluum.com",
+    source: "Finance Billing & Invoices One-Pager"
+  },
+  {
+    department: "Finance — Accounts Receivable",
+    topics: ["past due","AR","accounts receivable","overdue invoice","invoice copy","customer payment","ACH","check payment","E-Rate invoice","ECF invoice"],
+    answer: "For past due invoice questions, invoice copies, customer payment questions (ACH, check, card), and ECF/E-Rate invoice support — email ar@bluum.com.",
+    contact: "ar@bluum.com",
+    source: "Finance AR One-Pager"
+  },
+  {
+    department: "Finance — Commissions & SPIFFs",
+    topics: ["commission","commissions","SPIFF","spiff","payout","commission adjustment","vendor incentive","my pay","getting paid","incentive"],
+    answer: "For commission payout questions, commission adjustments, SPIFFs, and vendor-funded incentives — email commissions@bluum.com.",
+    contact: "commissions@bluum.com",
+    source: "Finance Commissions One-Pager"
+  },
+  {
+    department: "Finance — Expenses & Travel",
+    topics: ["expense","reimbursement","corporate card","credit card limit","travel","per diem","Concur","Conferma","expense report"],
+    answer: "For expense reimbursement, corporate credit cards or limit changes, per diem/travel expenses, and Concur/Conferma troubleshooting — email travelconcierge@bluum.com.",
+    contact: "travelconcierge@bluum.com",
+    source: "Finance Expenses & Travel One-Pager"
+  },
+  {
+    department: "Integration Team",
+    topics: ["installation","integrate","deployment","AV installation","classroom technology","boardroom","conference room","performing arts","esports","security cameras","bells","paging","turnkey","integration project","subcontractor"],
+    answer: "Bluum's Integration team designs and connects AV and technology systems so they work together seamlessly. Projects include classroom technology, boardrooms, conference rooms, multi-purpose rooms, athletics AV, performing arts centers, esports rooms, security cameras, and bells/paging systems.\n\nMagic question to ask customers: \"As you move forward with purchasing AV products, how can Bluum best support you with installation, integration, and deployment?\"\n\nIntegration is automatically engaged upon a successful sale. For pre-sales support, contact Christopher.Overlie@bluum.com.",
+    contact: "Christopher.Overlie@bluum.com (pre-sales) | Automatically engaged post-sale",
+    source: "Integration Team One-Pager"
+  },
+  {
+    department: "Leasing & Financing",
+    topics: ["leasing","financing","lease","payments","flexible payments","operating expense","capital expense","monthly payments","budget cycle","cash flow","Ryan Danielson","Vantage"],
+    answer: "Bluum offers both leasing (district pays to use equipment, doesn't own it, lower upfront cost, operating expense) and financing (district owns equipment, pays over time, capital expense). Various terms available (typically 3–5 years). Products, services, warranties, and soft costs can all be combined in one transaction.\n\nMagic question: \"If we could structure this investment with flexible payments through one of our vendor partners, would this solution be possible for your district?\"\n\nContact Ryan Danielson at Vantage Financial: rdanielson@vantagefncl.com | 512.814.0340.",
+    contact: "Ryan Danielson — rdanielson@vantagefncl.com | 512.814.0340 | Cell: 952.239.7806",
+    source: "Leasing & Financing One-Pager"
+  },
+  {
+    department: "Professional Learning",
+    topics: ["professional learning","PL","training","teacher training","PD","professional development","onsite training","remote training","Canvas","learning hub","self-paced","technology mentor","IFP training","Google training","Microsoft training","AI training"],
+    answer: "Bluum's Professional Learning team provides customized training for teachers to effectively use classroom technology. Options: Remote Session ($1,000, up to 3 hours, up to 20 attendees), Onsite Session ($3,050, up to 6 hours, up to 20 attendees), Self-Paced Learning (Canvas-hosted Learning Hub), Technology Mentor Cohort (up to 10 leaders, 2 onsite days + 6 monthly support sessions). Topics include IFPs, Google Workspace, Microsoft, AI, STEM/Makerspaces. Email eduservices@bluum.com to engage the team.",
+    contact: "eduservices@bluum.com",
+    source: "Professional Learning One-Pager"
+  },
+  {
+    department: "Project Management & Delivery",
+    topics: ["project management","PM","delivery","Christopher Overlie","ordering","project kickoff","project scheduling","deployment","customer training","project status","project update"],
+    answer: "Bluum's Project Management & Delivery team executes all integration projects. They're automatically engaged upon a successful integration sale. Responsibilities include: project initiation and risk assessment, ordering and validation of all materials, all project communication, scheduling with field teams and vendors, and verification of completion including customer training.\n\nFor pre-sales PM support, contact Christopher Overlie directly: Christopher.Overlie@bluum.com.",
+    contact: "Christopher.Overlie@bluum.com (pre-sales) | Automatically engaged post-sale",
+    source: "Project Management One-Pager"
+  },
+  {
+    department: "Purchasing",
+    topics: ["purchasing","purchase order","PO","vendor pricing","OEM pricing","product not in NetSuite","missing product","product not in Zinnia","add product","new product","freight","shipping issue","vendor issue","pricing discrepancy","product ETA"],
+    answer: "Purchasing handles vendor purchase orders, OEM pricing, and distribution partner pricing. For products not in Zinnia/NetSuite: email purchasing@bluum.com with a product link or manufacturer/SKU/model number + quantity needed, and ask for freight if applicable (include full shipping address). Turnaround: 24-48 hours. For issues with vendor POs (missing items, shipping, pricing discrepancies) — go through your Sales Admin. Purchasing manages vendor relationships and issues POs to all vendor partners.",
+    contact: "purchasing@bluum.com",
+    source: "Purchasing One-Pager"
+  },
+  {
+    department: "Quote Requests (Non-Integration)",
+    topics: ["quote request","quotes team","quotes@bluum.com","quote email","request a quote","device quote","standard quote","non-integration quote","SLA","quote turnaround"],
+    answer: "For non-integration quotes, email quotes@bluum.com. Include: customer number (or forward customer email), part number(s) if known, quantities, contract or desired margin, and any special/registered pricing you've already received. The quotes team works first-in-first-out with a 4-hour SLA (longer if purchasing or part number assistance is needed). Some contracts have dedicated specialists (e.g., Denver Public Schools).",
+    contact: "quotes@bluum.com",
+    source: "Quote Requests One-Pager"
+  },
+  {
+    department: "Sales Admin",
+    topics: ["sales admin","order processing","order","ETA","tracking","return","equipment return","new customer setup","COI","insurance","open order","order status","PO","signed quote","lift gate","delivery instructions"],
+    answer: "Sales Admins handle order processing (equipment and installation), ETA and tracking requests, equipment returns, new customer setup, insurance requests (COI), and open order/return management.\n\nTo submit an order, email your Sales Admin with: customer PO or signed quote, quote number from NetSuite, vendor quotes for custom pricing, delivery instructions (deliver by/after), lift gate needed (yes/no), memo for additional notes, and customer contact (email + phone).\n\nSales Admins do NOT handle deal registration, special pricing requests, or submitting invoices/proformas.",
+    contact: "Your assigned Sales Admin",
+    source: "Sales Admin One-Pager"
+  },
+  {
+    department: "Tech Services",
+    topics: ["tech service","post-install","break fix","repair","service request","warranty claim","support","service issue","technician","onsite service","subcontractor","service plan","post installation","customer support issue","something broken","not working"],
+    answer: "Tech Service handles all post-install break/fix support for integration projects after sign-off. Submit any service request to support@bluum.com — they'll work directly with your customer on your behalf. Response times: customer email within 6 hours, 93% quality assurance score. They have W2 technicians in A markets and a nationwide subcontractor network. Service plans are available (faster response, no labor charges). Tech Service owns ongoing service issues so you can focus on new opportunities.",
+    contact: "support@bluum.com",
+    source: "Tech Services One-Pager"
+  }
+];
+
+// ─── SEARCH ENGINE ────────────────────────────────────────────────────────────
+function normalize(str) {
+  return str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function tokenize(str) {
+  return normalize(str).split(' ').filter(t => t.length > 1);
+}
+
+function scoreEntry(entry, tokens) {
+  let score = 0;
+  const topicStr = entry.topics.join(' ');
+  const topicNorm = normalize(topicStr);
+  const answerNorm = normalize(entry.answer);
+  const deptNorm = normalize(entry.department);
+
+  for (const tok of tokens) {
+    // Exact phrase match in topics — highest weight
+    for (const topic of entry.topics) {
+      const tNorm = normalize(topic);
+      if (tNorm === tok) { score += 30; }
+      else if (tNorm.includes(tok) && tok.length >= 3) { score += 10; }
+    }
+    // Department match
+    if (deptNorm.includes(tok) && tok.length >= 3) { score += 8; }
+    // Answer match
+    if (answerNorm.includes(tok) && tok.length >= 3) { score += 3; }
+    // Partial in topics
+    if (topicNorm.includes(tok) && tok.length >= 3) { score += 5; }
+  }
+  return score;
+}
+
+function search(query) {
+  const tokens = tokenize(query);
+  if (!tokens.length) return [];
+
+  const scored = KB.map(entry => ({ entry, score: scoreEntry(entry, tokens) }));
+  scored.sort((a, b) => b.score - a.score);
+
+  // Return top 1-2 results that have a meaningful score
+  const results = scored.filter(s => s.score > 0).slice(0, 2);
+  return results;
+}
+
+// ─── CONTACT LINK HELPER ──────────────────────────────────────────────────────
+function makeContactHTML(contactStr) {
+  if (!contactStr) return '';
+  // email matches
+  return contactStr
+    .replace(/([\w.+-]+@[\w-]+\.[\w.-]+)/g, '<a href="mailto:$1">$1</a>')
+    .replace(/(\d{3}[.\-)]\d{3}[.\-]\d{4})/g, '<a href="tel:$1">$1</a>');
+}
+
+// ─── RENDER HELPERS ───────────────────────────────────────────────────────────
+function renderUserBubble(text) {
+  return `<div class="msg-row user">
+  <div class="user-bubble">${escapeHTML(text)}</div>
+</div>`;
+}
+
+function renderAssistantCard(entry) {
+  return `<div class="msg-row assistant">
+  <div class="assistant-card">
+    <div class="dept-label">${escapeHTML(entry.department)}</div>
+    <div class="answer-text">${formatAnswer(entry.answer)}</div>
+    <div class="contact-row">
+      <svg class="contact-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      ${makeContactHTML(entry.contact)}
+    </div>
+  </div>
+</div>`;
+}
+
+function renderNoResult() {
+  return `<div class="msg-row assistant">
+  <div class="no-result-card">
+    I'm not sure I understood that. Try rephrasing — or contact your Sales Admin directly.<br><br>
+    <strong>Need immediate help?</strong> Email <a href="mailto:help@bluum.com" style="color:#049e40;font-weight:600;">help@bluum.com</a>
+  </div>
+</div>`;
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatAnswer(text) {
+  return escapeHTML(text).replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+}
+
+// ─── CHAT CONTROLLER ──────────────────────────────────────────────────────────
+const chatArea = document.getElementById('chatArea');
+const userInput = document.getElementById('userInput');
+const welcomeCard = document.getElementById('welcomeCard');
+
+function appendHTML(html) {
+  chatArea.insertAdjacentHTML('beforeend', html);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function sendMessage() {
+  const query = userInput.value.trim();
+  if (!query) return;
+  userInput.value = '';
+
+  // Hide welcome card
+  if (welcomeCard) welcomeCard.style.display = 'none';
+
+  // Render user message
+  appendHTML(renderUserBubble(query));
+
+  // Search
+  const results = search(query);
+
+  // Render results
+  if (results.length === 0) {
+    appendHTML(renderNoResult());
+  } else {
+    for (const { entry } of results) {
+      appendHTML(renderAssistantCard(entry));
+    }
+  }
+
+  userInput.focus();
+}
+
+function askSuggestion(btn) {
+  userInput.value = btn.textContent;
+  sendMessage();
+}
+
+function handleKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// Focus input on load
+userInput.focus();
+</script>
+</body>
+</html>
