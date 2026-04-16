@@ -278,6 +278,16 @@
     /* Scrollbar */
     .chat-area::-webkit-scrollbar { width: 4px; }
     .chat-area::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+    /* Typing cursor */
+    .cursor {
+      display: inline-block;
+      color: var(--accent);
+      font-weight: 300;
+      animation: blink 0.7s step-end infinite;
+      margin-left: 1px;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
   </style>
 </head>
 <body>
@@ -504,17 +514,44 @@ function renderUserBubble(text) {
 </div>`;
 }
 
-function renderAssistantCard(entry) {
-  return `<div class="msg-row assistant">
-  <div class="assistant-card">
+function renderAssistantCard(entry, animate) {
+  const id = 'card-' + Date.now();
+  const html = `<div class="msg-row assistant">
+  <div class="assistant-card" id="${id}">
     <div class="dept-label">${escapeHTML(entry.department)}</div>
-    <div class="answer-text">${formatAnswer(entry.answer)}</div>
-    <div class="contact-row">
+    <div class="answer-text" id="${id}-text"></div>
+    <div class="contact-row" id="${id}-contact" style="display:none">
       <svg class="contact-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
       ${makeContactHTML(entry.contact)}
     </div>
   </div>
 </div>`;
+  return { html, id, entry };
+}
+
+function typeAnswer(id, entry) {
+  const textEl = document.getElementById(id + '-text');
+  const contactEl = document.getElementById(id + '-contact');
+  const fullText = entry.answer;
+  let i = 0;
+  const speed = 12; // ms per character
+
+  function tick() {
+    if (i < fullText.length) {
+      // Reveal char by char, handle newlines
+      i += Math.ceil(Math.random() * 3); // slightly variable speed
+      i = Math.min(i, fullText.length);
+      const chunk = fullText.slice(0, i);
+      textEl.innerHTML = formatAnswer(chunk) + '<span class="cursor">|</span>';
+      chatArea.scrollTop = chatArea.scrollHeight;
+      setTimeout(tick, speed);
+    } else {
+      textEl.innerHTML = formatAnswer(fullText);
+      contactEl.style.display = 'flex';
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+  }
+  tick();
 }
 
 function renderNoResult() {
@@ -563,7 +600,9 @@ function sendMessage() {
     appendHTML(renderNoResult());
   } else {
     for (const { entry } of results) {
-      appendHTML(renderAssistantCard(entry));
+      const { html, id } = renderAssistantCard(entry);
+      appendHTML(html);
+      typeAnswer(id, entry);
     }
   }
 
