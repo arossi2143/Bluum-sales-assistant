@@ -486,15 +486,22 @@ function scoreEntry(entry, tokens) {
   return score;
 }
 
+// Topics we know we don't cover — always return no result
+const OUT_OF_SCOPE = ['marketing','hr','human resources','legal','it helpdesk','helpdesk','payroll','hiring','recruitment','onboarding','social media','pr','public relations','events','event planning','product management','leadership','executive','c-suite'];
+
 function search(query) {
   const tokens = tokenize(query);
   if (!tokens.length) return [];
 
+  // If the query clearly matches an out-of-scope topic, return nothing
+  const queryNorm = normalize(query);
+  if (OUT_OF_SCOPE.some(t => queryNorm.includes(t))) return [];
+
   const scored = KB.map(entry => ({ entry, score: scoreEntry(entry, tokens) }));
   scored.sort((a, b) => b.score - a.score);
 
-  // Return top 1-2 results that have a meaningful score
-  const results = scored.filter(s => s.score > 0).slice(0, 1);
+  // Only return results with a strong topic match (score >= 10 means at least one real topic hit)
+  const results = scored.filter(s => s.score >= 10).slice(0, 1);
   return results;
 }
 
