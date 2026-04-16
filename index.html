@@ -294,8 +294,8 @@
 
 <!-- HEADER -->
 <div class="header">
-  <div class="header-icon">
-    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+  <div class="header-icon" onclick="restartChat()" style="cursor:pointer;" title="Start over">
+    <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
   </div>
   <div class="header-text">
     <div class="header-title">Bluum</div>
@@ -619,6 +619,36 @@ function handleKeydown(e) {
     e.preventDefault();
     sendMessage();
   }
+}
+
+function restartChat() {
+  // Remove all messages except the welcome card
+  const msgs = chatArea.querySelectorAll('.msg-row, .msg-divider');
+  msgs.forEach(el => el.remove());
+  // Restore welcome card
+  const existing = document.getElementById('welcomeCard');
+  if (existing) {
+    existing.style.display = 'block';
+  } else {
+    chatArea.insertAdjacentHTML('afterbegin', `
+      <div class="welcome-card" id="welcomeCard">
+        <div class="welcome-title">👋 Hi there, sales rep!</div>
+        <div class="welcome-sub">Ask me anything about Bluum's processes — quotes, bids, contracts, billing, tech support, and more.</div>
+        <div class="suggestions" id="suggestions">
+          <button class="suggestion-chip" onclick="askSuggestion(this)">How do I create a quote?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">Who handles commissions?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">How do I request a quote?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">Who do I contact for a broken install?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">How do I engage the Bids team?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">What is Tech Service?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">How does leasing work?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">How do I submit an order?</button>
+        </div>
+      </div>`);
+  }
+  userInput.value = '';
+  userInput.focus();
+  chatArea.scrollTop = 0;
 }
 
 // Focus input on load
