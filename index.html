@@ -306,9 +306,9 @@
 <!-- CHAT AREA -->
 <div class="chat-area" id="chatArea">
   <div class="welcome-card" id="welcomeCard">
-    <div class="welcome-title">👋 Hi there, sales rep!</div>
-    <div class="welcome-sub">Ask me anything about Bluum's processes — quotes, bids, contracts, billing, tech support, and more.</div>
-    <div class="suggestions" id="suggestions">
+    <div class="welcome-title">👋 Hey! Before we start...</div>
+    <div class="welcome-sub">What's your name? Just type it below so I know who I'm helping.</div>
+    <div class="suggestions" id="suggestions" style="display:none;">
       <button class="suggestion-chip" onclick="askSuggestion(this)">How do I create a quote?</button>
       <button class="suggestion-chip" onclick="askSuggestion(this)">Who handles commissions?</button>
       <button class="suggestion-chip" onclick="askSuggestion(this)">How do I request a quote?</button>
@@ -518,12 +518,12 @@ function renderAssistantCard(entry, animate) {
   const id = 'card-' + Date.now();
   const html = `<div class="msg-row assistant">
   <div class="assistant-card" id="${id}">
-    <div class="dept-label">${escapeHTML(entry.department)}</div>
+    ${entry.department ? `<div class="dept-label">${escapeHTML(entry.department)}</div>` : ''}
     <div class="answer-text" id="${id}-text"></div>
-    <div class="contact-row" id="${id}-contact" style="display:none">
+    ${entry.contact ? `<div class="contact-row" id="${id}-contact" style="display:none">
       <svg class="contact-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
       ${makeContactHTML(entry.contact)}
-    </div>
+    </div>` : ''}
   </div>
 </div>`;
   return { html, id, entry };
@@ -534,12 +534,12 @@ function typeAnswer(id, entry) {
   const contactEl = document.getElementById(id + '-contact');
   const fullText = entry.answer;
   let i = 0;
-  const speed = 12; // ms per character
+  const speed = 22; // ms per character
 
   function tick() {
     if (i < fullText.length) {
       // Reveal char by char, handle newlines
-      i += Math.ceil(Math.random() * 3); // slightly variable speed
+      i += Math.ceil(Math.random() * 2); // slightly variable speed
       i = Math.min(i, fullText.length);
       const chunk = fullText.slice(0, i);
       textEl.innerHTML = formatAnswer(chunk) + '<span class="cursor">|</span>';
@@ -547,7 +547,7 @@ function typeAnswer(id, entry) {
       setTimeout(tick, speed);
     } else {
       textEl.innerHTML = formatAnswer(fullText);
-      contactEl.style.display = 'flex';
+      if (contactEl) contactEl.style.display = 'flex';
       chatArea.scrollTop = chatArea.scrollHeight;
     }
   }
@@ -557,8 +557,8 @@ function typeAnswer(id, entry) {
 function renderNoResult() {
   return `<div class="msg-row assistant">
   <div class="no-result-card">
-    I'm not sure I understood that. Try rephrasing — or contact your Sales Admin directly.<br><br>
-    <strong>Need immediate help?</strong> Email <a href="mailto:help@bluum.com" style="color:#049e40;font-weight:600;">help@bluum.com</a>
+    I don't know the answer to that one — I'm only set up to help with internal Bluum processes like quotes, bids, billing, orders, and support. Try asking your manager or the right department directly.<br><br>
+    <strong>Need a starting point?</strong> Your Sales Admin is usually a good first call.
   </div>
 </div>`;
 }
@@ -576,15 +576,41 @@ const chatArea = document.getElementById('chatArea');
 const userInput = document.getElementById('userInput');
 const welcomeCard = document.getElementById('welcomeCard');
 
+let userName = null; // set after first message
+
 function appendHTML(html) {
   chatArea.insertAdjacentHTML('beforeend', html);
   chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function greetUser(name) {
+  // Show suggestions after name is captured
+  const suggestions = document.getElementById('suggestions');
+  const welcomeTitle = welcomeCard.querySelector('.welcome-title');
+  const welcomeSub = welcomeCard.querySelector('.welcome-sub');
+  if (welcomeTitle) welcomeTitle.textContent = `Hey ${name}! 👋`;
+  if (welcomeSub) welcomeSub.textContent = "What do you need help with? Ask me anything about Bluum's processes.";
+  if (suggestions) suggestions.style.display = 'flex';
 }
 
 function sendMessage() {
   const query = userInput.value.trim();
   if (!query) return;
   userInput.value = '';
+
+  // First message = name capture
+  if (!userName) {
+    userName = query;
+    appendHTML(renderUserBubble(query));
+    greetUser(userName);
+    // Friendly acknowledgment
+    const ack = { department: '', answer: `Got it, ${userName}! What can I help you with?`, contact: '' };
+    const { html, id } = renderAssistantCard(ack);
+    appendHTML(html);
+    typeAnswer(id, ack);
+    userInput.focus();
+    return;
+  }
 
   // Hide welcome card
   if (welcomeCard) welcomeCard.style.display = 'none';
